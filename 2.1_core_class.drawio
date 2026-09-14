@@ -1,9 +1,923 @@
 <mxfile host="app.diagrams.net">
   <diagram name="第 1 页" id="416hKkXgNdKw5RgXMrII">
-    <mxGraphModel>
+    <mxGraphModel dx="4003" dy="2433" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
+        <UserObject label="" mermaidData="{&#xa;  &quot;data&quot;: &quot;classDiagram\n    %% 表现层\n    class EDAServerController {\n        +GetEqSD(GetEqSDRequest) GetEqSDResponse\n        +CreateDCP(CreateDCPRequest) DCPOperationResponse\n        +ActivateDCP(string) DCPOperationResponse\n        +DeactivateDCP(string) DCPOperationResponse\n        +DeleteDCP(string) DCPOperationResponse\n        +GetAllDCPs() List~dynamic~\n        -DCPManager _dcpManager\n        -EqSDModel _eqsdModel\n    }\n\n    %% 服务层\n    class SessionManager {\n        +CreateSession(string, string) EDASession\n        +RemoveSession(string) bool\n        +GetSession(string) EDASession?\n        +UpdateSessionActivity(string) void\n        +GetActiveSessionCount() int\n        -Dictionary~string,EDASession~ _sessions\n        -int _maxSessions\n        +event SessionCreated\n        +event SessionRemoved\n    }\n\n    class EDASession {\n        +string SessionId\n        +string ClientId\n        +string? ClientIPAddress\n        +SessionState State\n        +Timestamp CreatedTime\n        +Timestamp LastActivityTime\n        +List~string~ DcpIds\n        +UpdateActivity() void\n        +AttachDCP(string) void\n        +DetachDCP(string) void\n    }\n\n    class DCPManager {\n        +Create(DCPDefinition) DataCollectionPlan\n        +Activate(string) void\n        +Deactivate(string) void\n        +Delete(string) bool\n        +Get(string) DataCollectionPlan?\n        +GetAll() IReadOnlyCollection~DataCollectionPlan~\n        -Dictionary~string,DataCollectionPlan~ _dcps\n    }\n\n    class SampleEngine {\n        +Start() void\n        +Stop() void\n        +StartSampling(DataCollectionPlan) void\n        +StopSampling(DataCollectionPlan) void\n        -DCPManager _dcpManager\n        -Dictionary~string,Timer~ _samplingTimers\n        +event DataSampled\n    }\n\n    %% 业务层\n    class EqSDModel {\n        +string EquipmentId\n        +string EquipmentType\n        +string ModelVersion\n        +SEMIStandardInfo? SEMIStandards\n        +List~ParameterDefinition~ Parameters\n        +List~EventDefinition~ Events\n        +List~TraceDefinition~ Traces\n        +string? CreatedTime\n    }\n\n    class ParameterDefinition {\n        +string ParameterId\n        +string Name\n        +string DataType\n        +string? Unit\n        +double MinValue\n        +double MaxValue\n        +string? Description\n        +bool IsReadOnly\n        +bool IsCritical\n    }\n\n    class EventDefinition {\n        +string EventId\n        +string Name\n        +string EventType\n        +string? Severity\n        +string? Description\n    }\n\n    class TraceDefinition {\n        +string TraceId\n        +string Name\n        +string DataType\n        +double SampleRate\n        +string? Unit\n        +int MaxDuration\n        +string? Description\n    }\n\n    class DataCollectionPlan {\n        +string DcpId\n        +DCPDefinition Definition\n        +DCPState State\n        +Timestamp CreatedTime\n        +Timestamp? ActivatedTime\n        +Timestamp? DeactivatedTime\n        +AddSample(DataSample) void\n        +CollectSamples() DataSampleCollection?\n        -List~DataSample~ SampleBuffer\n    }\n\n    class DCPDefinition {\n        +string DcpId\n        +List~string~ ParameterIds\n        +int SamplingIntervalMs\n        +int ReportingIntervalMs\n        +string? TriggerCondition\n        +string? Description\n        +Validate() void\n    }\n\n    class EqSDSerializer {\n        +static Serialize(EqSDModel) string\n        +static Deserialize(string) EqSDModel\n        +static LoadFromFile(string) EqSDModel\n        +static SaveToFile(EqSDModel, string) void\n    }\n\n    %% 数据层\n    class IParameterProvider {\n        &lt;&lt;interface&gt;&gt;\n        +GetParameterValue(string) object?\n        +SubscribeParameterChange(string, Action~object~) IDisposable\n    }\n\n    class IEventProvider {\n        &lt;&lt;interface&gt;&gt;\n        +SubscribeEvent(string, Action~EventData~) IDisposable\n        +GetEventHistory(string, Timestamp, Timestamp) List~EventData~\n    }\n\n    class ITraceProvider {\n        &lt;&lt;interface&gt;&gt;\n        +StartCapture(string, int) Task~TraceData~\n        +StopCapture(string) void\n    }\n\n    class MockDataProvider {\n        +implements IParameterProvider\n        +implements IEventProvider\n        +implements ITraceProvider\n    }\n\n    %% 基础设施层\n    class TlsCertificateProvider {\n        +TlsCertificateProvider(string, string?)\n        +LoadCertificate() X509Certificate2\n        +ValidateCertificate() bool\n        -string _certificatePath\n        -string? _certificatePassword\n    }\n\n    class PasswordValidator {\n        +PasswordValidator()\n        +PasswordValidator(string, string)\n        +AddCredential(string, string) void\n        +Validate(string, string) bool\n        -Dictionary~string,string~ _credentials\n    }\n\n    class EDAServerConfig {\n        +int Port\n        +string? CertificatePath\n        +string? CertificatePassword\n        +int MaxConcurrentSessions\n        +bool EnableUsernamePasswordAuth\n        +bool EnableCertificateAuth\n        +string? CACertificatePath\n        +string? EqSDModelPath\n        +string? NTPServer\n        +string? LogFilePath\n        +Validate() void\n    }\n\n    %% 通用模型\n    class DCPState {\n        &lt;&lt;enumeration&gt;&gt;\n        Created\n        Activating\n        Active\n        Deactivating\n        Inactive\n        Error\n    }\n\n    class SessionState {\n        &lt;&lt;enumeration&gt;&gt;\n        Active\n        Disconnected\n        Timeout\n        Error\n    }\n\n    class Timestamp {\n        +DateTime Value\n        +static Now() Timestamp\n        +ParseIso8601(string) Timestamp\n        +ToIso8601() string\n        +ToUnixTimeMilliseconds() long\n    }\n\n    class DataSample {\n        +string ParameterId\n        +object Value\n        +Timestamp Timestamp\n        +required string DataType\n        +string? Unit\n        +bool IsGoodQuality\n    }\n\n    class DataSampleCollection {\n        +List~DataSample~ Samples\n        +Timestamp CollectionTimestamp\n        +string DcpId\n    }\n\n    class SEMIStandardInfo {\n        +string E120Version\n        +string E125Version\n        +string E132Version\n        +string E134Version\n        +string E164Version\n    }\n\n    %% 关系\n    EDAServerController --&gt; DCPManager\n    EDAServerController --&gt; EqSDModel\n    SessionManager --&gt; EDASession\n    DCPManager --&gt; DataCollectionPlan\n    DataCollectionPlan --&gt; DCPDefinition\n    DataCollectionPlan --&gt; DataSample\n    DataSampleCollection --&gt; DataSample\n    SampleEngine --&gt; DCPManager\n    SampleEngine --&gt; DataSample\n\n    EqSDModel --&gt; ParameterDefinition\n    EqSDModel --&gt; EventDefinition\n    EqSDModel --&gt; TraceDefinition\n    EqSDModel --&gt; SEMIStandardInfo\n    EqSDSerializer --&gt; EqSDModel\n\n    MockDataProvider ..|&gt; IParameterProvider\n    MockDataProvider ..|&gt; IEventProvider\n    MockDataProvider ..|&gt; ITraceProvider\n\n    EDAServerConfig --&gt; PasswordValidator\n    EDAServerConfig --&gt; TlsCertificateProvider\n\n    SessionManager \&quot;3+\&quot; ..&gt; EDASession : manages\n    DCPManager \&quot;1\&quot; *-- \&quot;n\&quot; DataCollectionPlan : contains\n    EqSDModel \&quot;1\&quot; *-- \&quot;n\&quot; ParameterDefinition : has\n    EqSDModel \&quot;1\&quot; *-- \&quot;n\&quot; EventDefinition : has\n    EqSDModel \&quot;1\&quot; *-- \&quot;n\&quot; TraceDefinition : has&quot;,&#xa;  &quot;config&quot;: null&#xa;}" id="NZPPFZEXmw3su-86euV2-1">
+          <mxCell connectable="0" parent="1" style="group;transparentBounds=1;editIcon=1;lockedGroup=0;groupPadding=10;" vertex="1">
+            <mxGeometry as="geometry" />
+          </mxCell>
+        </UserObject>
+        <UserObject label="&lt;b&gt;EDAServerController&lt;/b&gt;" mermaidId="n:EDAServerController" mermaidBaseStyle="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" mermaidBaseValue="&lt;b&gt;EDAServerController&lt;/b&gt;" id="NZPPFZEXmw3su-86euV2-2">
+          <mxCell parent="NZPPFZEXmw3su-86euV2-1" style="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" vertex="1">
+            <mxGeometry height="288" width="496" x="455" y="54" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <mxCell id="NZPPFZEXmw3su-86euV2-3" parent="NZPPFZEXmw3su-86euV2-2" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="-DCPManager _dcpManager" vertex="1">
+          <mxGeometry height="24" width="496" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-4" parent="NZPPFZEXmw3su-86euV2-2" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="-EqSDModel _eqsdModel" vertex="1">
+          <mxGeometry height="24" width="496" y="84" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-5" parent="NZPPFZEXmw3su-86euV2-2" style="line;strokeWidth=1;fillColor=none;spacingLeft=3;spacingRight=3;rotatable=0;points=[];strokeColor=inherit;" vertex="1">
+          <mxGeometry height="24" width="496" y="108" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-6" parent="NZPPFZEXmw3su-86euV2-2" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+GetEqSD(GetEqSDRequest) GetEqSDResponse" vertex="1">
+          <mxGeometry height="24" width="496" y="132" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-7" parent="NZPPFZEXmw3su-86euV2-2" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+CreateDCP(CreateDCPRequest) DCPOperationResponse" vertex="1">
+          <mxGeometry height="24" width="496" y="156" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-8" parent="NZPPFZEXmw3su-86euV2-2" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+ActivateDCP(string) DCPOperationResponse" vertex="1">
+          <mxGeometry height="24" width="496" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-9" parent="NZPPFZEXmw3su-86euV2-2" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+DeactivateDCP(string) DCPOperationResponse" vertex="1">
+          <mxGeometry height="24" width="496" y="204" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-10" parent="NZPPFZEXmw3su-86euV2-2" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+DeleteDCP(string) DCPOperationResponse" vertex="1">
+          <mxGeometry height="24" width="496" y="228" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-11" parent="NZPPFZEXmw3su-86euV2-2" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+GetAllDCPs() List&lt;dynamic&gt;" vertex="1">
+          <mxGeometry height="24" width="496" y="252" as="geometry" />
+        </mxCell>
+        <UserObject label="&lt;b&gt;SessionManager&lt;/b&gt;" mermaidId="n:SessionManager" mermaidBaseStyle="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" mermaidBaseValue="&lt;b&gt;SessionManager&lt;/b&gt;" id="NZPPFZEXmw3su-86euV2-12">
+          <mxCell parent="NZPPFZEXmw3su-86euV2-1" style="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" vertex="1">
+            <mxGeometry height="312" width="375" x="30" y="54" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <mxCell id="NZPPFZEXmw3su-86euV2-13" parent="NZPPFZEXmw3su-86euV2-12" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="-Dictionary&lt;string,EDASession&gt; _sessions" vertex="1">
+          <mxGeometry height="24" width="375" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-14" parent="NZPPFZEXmw3su-86euV2-12" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="-int _maxSessions" vertex="1">
+          <mxGeometry height="24" width="375" y="84" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-15" parent="NZPPFZEXmw3su-86euV2-12" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+event SessionCreated" vertex="1">
+          <mxGeometry height="24" width="375" y="108" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-16" parent="NZPPFZEXmw3su-86euV2-12" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+event SessionRemoved" vertex="1">
+          <mxGeometry height="24" width="375" y="132" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-17" parent="NZPPFZEXmw3su-86euV2-12" style="line;strokeWidth=1;fillColor=none;spacingLeft=3;spacingRight=3;rotatable=0;points=[];strokeColor=inherit;" vertex="1">
+          <mxGeometry height="24" width="375" y="156" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-18" parent="NZPPFZEXmw3su-86euV2-12" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+CreateSession(string, string) EDASession" vertex="1">
+          <mxGeometry height="24" width="375" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-19" parent="NZPPFZEXmw3su-86euV2-12" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+RemoveSession(string) bool" vertex="1">
+          <mxGeometry height="24" width="375" y="204" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-20" parent="NZPPFZEXmw3su-86euV2-12" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+GetSession(string) EDASession?" vertex="1">
+          <mxGeometry height="24" width="375" y="228" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-21" parent="NZPPFZEXmw3su-86euV2-12" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+UpdateSessionActivity(string) void" vertex="1">
+          <mxGeometry height="24" width="375" y="252" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-22" parent="NZPPFZEXmw3su-86euV2-12" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+GetActiveSessionCount() int" vertex="1">
+          <mxGeometry height="24" width="375" y="276" as="geometry" />
+        </mxCell>
+        <UserObject label="&lt;b&gt;EDASession&lt;/b&gt;" mermaidId="n:EDASession" mermaidBaseStyle="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" mermaidBaseValue="&lt;b&gt;EDASession&lt;/b&gt;" id="NZPPFZEXmw3su-86euV2-23">
+          <mxCell parent="NZPPFZEXmw3su-86euV2-1" style="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" vertex="1">
+            <mxGeometry height="336" width="275" x="80" y="464" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <mxCell id="NZPPFZEXmw3su-86euV2-24" parent="NZPPFZEXmw3su-86euV2-23" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+string SessionId" vertex="1">
+          <mxGeometry height="24" width="275" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-25" parent="NZPPFZEXmw3su-86euV2-23" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+string ClientId" vertex="1">
+          <mxGeometry height="24" width="275" y="84" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-26" parent="NZPPFZEXmw3su-86euV2-23" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+string? ClientIPAddress" vertex="1">
+          <mxGeometry height="24" width="275" y="108" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-27" parent="NZPPFZEXmw3su-86euV2-23" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+SessionState State" vertex="1">
+          <mxGeometry height="24" width="275" y="132" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-28" parent="NZPPFZEXmw3su-86euV2-23" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+Timestamp CreatedTime" vertex="1">
+          <mxGeometry height="24" width="275" y="156" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-29" parent="NZPPFZEXmw3su-86euV2-23" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+Timestamp LastActivityTime" vertex="1">
+          <mxGeometry height="24" width="275" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-30" parent="NZPPFZEXmw3su-86euV2-23" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+List&lt;string&gt; DcpIds" vertex="1">
+          <mxGeometry height="24" width="275" y="204" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-31" parent="NZPPFZEXmw3su-86euV2-23" style="line;strokeWidth=1;fillColor=none;spacingLeft=3;spacingRight=3;rotatable=0;points=[];strokeColor=inherit;" vertex="1">
+          <mxGeometry height="24" width="275" y="228" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-32" parent="NZPPFZEXmw3su-86euV2-23" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+UpdateActivity() void" vertex="1">
+          <mxGeometry height="24" width="275" y="252" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-33" parent="NZPPFZEXmw3su-86euV2-23" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+AttachDCP(string) void" vertex="1">
+          <mxGeometry height="24" width="275" y="276" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-34" parent="NZPPFZEXmw3su-86euV2-23" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+DetachDCP(string) void" vertex="1">
+          <mxGeometry height="24" width="275" y="300" as="geometry" />
+        </mxCell>
+        <UserObject label="&lt;b&gt;DCPManager&lt;/b&gt;" mermaidId="n:DCPManager" mermaidBaseStyle="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" mermaidBaseValue="&lt;b&gt;DCPManager&lt;/b&gt;" id="NZPPFZEXmw3su-86euV2-35">
+          <mxCell parent="NZPPFZEXmw3su-86euV2-1" style="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" vertex="1">
+            <mxGeometry height="264" width="435" x="1434" y="490" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <mxCell id="NZPPFZEXmw3su-86euV2-36" parent="NZPPFZEXmw3su-86euV2-35" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="-Dictionary&lt;string,DataCollectionPlan&gt; _dcps" vertex="1">
+          <mxGeometry height="24" width="435" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-37" parent="NZPPFZEXmw3su-86euV2-35" style="line;strokeWidth=1;fillColor=none;spacingLeft=3;spacingRight=3;rotatable=0;points=[];strokeColor=inherit;" vertex="1">
+          <mxGeometry height="24" width="435" y="84" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-38" parent="NZPPFZEXmw3su-86euV2-35" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+Create(DCPDefinition) DataCollectionPlan" vertex="1">
+          <mxGeometry height="24" width="435" y="108" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-39" parent="NZPPFZEXmw3su-86euV2-35" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+Activate(string) void" vertex="1">
+          <mxGeometry height="24" width="435" y="132" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-40" parent="NZPPFZEXmw3su-86euV2-35" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+Deactivate(string) void" vertex="1">
+          <mxGeometry height="24" width="435" y="156" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-41" parent="NZPPFZEXmw3su-86euV2-35" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+Delete(string) bool" vertex="1">
+          <mxGeometry height="24" width="435" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-42" parent="NZPPFZEXmw3su-86euV2-35" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+Get(string) DataCollectionPlan?" vertex="1">
+          <mxGeometry height="24" width="435" y="204" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-43" parent="NZPPFZEXmw3su-86euV2-35" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+GetAll() IReadOnlyCollection&lt;DataCollectionPlan&gt;" vertex="1">
+          <mxGeometry height="24" width="435" y="228" as="geometry" />
+        </mxCell>
+        <UserObject label="&lt;b&gt;SampleEngine&lt;/b&gt;" mermaidId="n:SampleEngine" mermaidBaseStyle="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" mermaidBaseValue="&lt;b&gt;SampleEngine&lt;/b&gt;" id="NZPPFZEXmw3su-86euV2-44">
+          <mxCell parent="NZPPFZEXmw3su-86euV2-1" style="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" vertex="1">
+            <mxGeometry height="264" width="382" x="1774" y="54" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <mxCell id="NZPPFZEXmw3su-86euV2-45" parent="NZPPFZEXmw3su-86euV2-44" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="-DCPManager _dcpManager" vertex="1">
+          <mxGeometry height="24" width="382" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-46" parent="NZPPFZEXmw3su-86euV2-44" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="-Dictionary&lt;string,Timer&gt; _samplingTimers" vertex="1">
+          <mxGeometry height="24" width="382" y="84" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-52" parent="NZPPFZEXmw3su-86euV2-44" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+StopSampling(DataCollectionPlan) void" vertex="1">
+          <mxGeometry height="24" width="382" y="108" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-51" parent="NZPPFZEXmw3su-86euV2-44" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+StartSampling(DataCollectionPlan) void" vertex="1">
+          <mxGeometry height="24" width="382" y="132" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-50" parent="NZPPFZEXmw3su-86euV2-44" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+Stop() void" vertex="1">
+          <mxGeometry height="24" width="382" y="156" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-49" parent="NZPPFZEXmw3su-86euV2-44" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+Start() void" vertex="1">
+          <mxGeometry height="24" width="382" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-48" parent="NZPPFZEXmw3su-86euV2-44" style="line;strokeWidth=1;fillColor=none;spacingLeft=3;spacingRight=3;rotatable=0;points=[];strokeColor=inherit;" vertex="1">
+          <mxGeometry height="24" width="382" y="204" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-47" parent="NZPPFZEXmw3su-86euV2-44" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+event DataSampled" vertex="1">
+          <mxGeometry height="24" width="382" y="228" as="geometry" />
+        </mxCell>
+        <UserObject label="&lt;b&gt;EqSDModel&lt;/b&gt;" mermaidId="n:EqSDModel" mermaidBaseStyle="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" mermaidBaseValue="&lt;b&gt;EqSDModel&lt;/b&gt;" id="NZPPFZEXmw3su-86euV2-53">
+          <mxCell parent="NZPPFZEXmw3su-86euV2-1" style="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" vertex="1">
+            <mxGeometry height="288" width="345" x="601" y="488" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <mxCell id="NZPPFZEXmw3su-86euV2-54" parent="NZPPFZEXmw3su-86euV2-53" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+string EquipmentId" vertex="1">
+          <mxGeometry height="24" width="345" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-55" parent="NZPPFZEXmw3su-86euV2-53" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+string EquipmentType" vertex="1">
+          <mxGeometry height="24" width="345" y="84" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-56" parent="NZPPFZEXmw3su-86euV2-53" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+string ModelVersion" vertex="1">
+          <mxGeometry height="24" width="345" y="108" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-57" parent="NZPPFZEXmw3su-86euV2-53" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+SEMIStandardInfo? SEMIStandards" vertex="1">
+          <mxGeometry height="24" width="345" y="132" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-58" parent="NZPPFZEXmw3su-86euV2-53" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+List&lt;ParameterDefinition&gt; Parameters" vertex="1">
+          <mxGeometry height="24" width="345" y="156" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-59" parent="NZPPFZEXmw3su-86euV2-53" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+List&lt;EventDefinition&gt; Events" vertex="1">
+          <mxGeometry height="24" width="345" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-60" parent="NZPPFZEXmw3su-86euV2-53" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+List&lt;TraceDefinition&gt; Traces" vertex="1">
+          <mxGeometry height="24" width="345" y="204" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-61" parent="NZPPFZEXmw3su-86euV2-53" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+string? CreatedTime" vertex="1">
+          <mxGeometry height="24" width="345" y="228" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-62" parent="NZPPFZEXmw3su-86euV2-53" style="line;strokeWidth=1;fillColor=none;spacingLeft=3;spacingRight=3;rotatable=0;points=[];strokeColor=inherit;" vertex="1">
+          <mxGeometry height="24" width="345" y="252" as="geometry" />
+        </mxCell>
+        <UserObject label="&lt;b&gt;ParameterDefinition&lt;/b&gt;" mermaidId="n:ParameterDefinition" mermaidBaseStyle="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" mermaidBaseValue="&lt;b&gt;ParameterDefinition&lt;/b&gt;" id="NZPPFZEXmw3su-86euV2-63">
+          <mxCell parent="NZPPFZEXmw3su-86euV2-1" style="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" vertex="1">
+            <mxGeometry height="312" width="238" x="315" y="864" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <mxCell id="NZPPFZEXmw3su-86euV2-64" parent="NZPPFZEXmw3su-86euV2-63" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+string ParameterId" vertex="1">
+          <mxGeometry height="24" width="238" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-65" parent="NZPPFZEXmw3su-86euV2-63" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+string Name" vertex="1">
+          <mxGeometry height="24" width="238" y="84" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-66" parent="NZPPFZEXmw3su-86euV2-63" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+string DataType" vertex="1">
+          <mxGeometry height="24" width="238" y="108" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-67" parent="NZPPFZEXmw3su-86euV2-63" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+string? Unit" vertex="1">
+          <mxGeometry height="24" width="238" y="132" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-68" parent="NZPPFZEXmw3su-86euV2-63" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+double MinValue" vertex="1">
+          <mxGeometry height="24" width="238" y="156" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-69" parent="NZPPFZEXmw3su-86euV2-63" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+double MaxValue" vertex="1">
+          <mxGeometry height="24" width="238" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-70" parent="NZPPFZEXmw3su-86euV2-63" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+string? Description" vertex="1">
+          <mxGeometry height="24" width="238" y="204" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-71" parent="NZPPFZEXmw3su-86euV2-63" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+bool IsReadOnly" vertex="1">
+          <mxGeometry height="24" width="238" y="228" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-72" parent="NZPPFZEXmw3su-86euV2-63" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+bool IsCritical" vertex="1">
+          <mxGeometry height="24" width="238" y="252" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-73" parent="NZPPFZEXmw3su-86euV2-63" style="line;strokeWidth=1;fillColor=none;spacingLeft=3;spacingRight=3;rotatable=0;points=[];strokeColor=inherit;" vertex="1">
+          <mxGeometry height="24" width="238" y="276" as="geometry" />
+        </mxCell>
+        <UserObject label="&lt;b&gt;EventDefinition&lt;/b&gt;" mermaidId="n:EventDefinition" mermaidBaseStyle="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" mermaidBaseValue="&lt;b&gt;EventDefinition&lt;/b&gt;" id="NZPPFZEXmw3su-86euV2-74">
+          <mxCell parent="NZPPFZEXmw3su-86euV2-1" style="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" vertex="1">
+            <mxGeometry height="216" width="220" x="602" y="864" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <mxCell id="NZPPFZEXmw3su-86euV2-75" parent="NZPPFZEXmw3su-86euV2-74" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+string EventId" vertex="1">
+          <mxGeometry height="24" width="220" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-76" parent="NZPPFZEXmw3su-86euV2-74" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+string Name" vertex="1">
+          <mxGeometry height="24" width="220" y="84" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-77" parent="NZPPFZEXmw3su-86euV2-74" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+string EventType" vertex="1">
+          <mxGeometry height="24" width="220" y="108" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-78" parent="NZPPFZEXmw3su-86euV2-74" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+string? Severity" vertex="1">
+          <mxGeometry height="24" width="220" y="132" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-79" parent="NZPPFZEXmw3su-86euV2-74" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+string? Description" vertex="1">
+          <mxGeometry height="24" width="220" y="156" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-80" parent="NZPPFZEXmw3su-86euV2-74" style="line;strokeWidth=1;fillColor=none;spacingLeft=3;spacingRight=3;rotatable=0;points=[];strokeColor=inherit;" vertex="1">
+          <mxGeometry height="24" width="220" y="180" as="geometry" />
+        </mxCell>
+        <UserObject label="&lt;b&gt;TraceDefinition&lt;/b&gt;" mermaidId="n:TraceDefinition" mermaidBaseStyle="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" mermaidBaseValue="&lt;b&gt;TraceDefinition&lt;/b&gt;" id="NZPPFZEXmw3su-86euV2-81">
+          <mxCell parent="NZPPFZEXmw3su-86euV2-1" style="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" vertex="1">
+            <mxGeometry height="264" width="225" x="872" y="864" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <mxCell id="NZPPFZEXmw3su-86euV2-82" parent="NZPPFZEXmw3su-86euV2-81" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+string TraceId" vertex="1">
+          <mxGeometry height="24" width="225" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-83" parent="NZPPFZEXmw3su-86euV2-81" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+string Name" vertex="1">
+          <mxGeometry height="24" width="225" y="84" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-84" parent="NZPPFZEXmw3su-86euV2-81" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+string DataType" vertex="1">
+          <mxGeometry height="24" width="225" y="108" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-85" parent="NZPPFZEXmw3su-86euV2-81" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+double SampleRate" vertex="1">
+          <mxGeometry height="24" width="225" y="132" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-86" parent="NZPPFZEXmw3su-86euV2-81" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+string? Unit" vertex="1">
+          <mxGeometry height="24" width="225" y="156" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-87" parent="NZPPFZEXmw3su-86euV2-81" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+int MaxDuration" vertex="1">
+          <mxGeometry height="24" width="225" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-88" parent="NZPPFZEXmw3su-86euV2-81" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+string? Description" vertex="1">
+          <mxGeometry height="24" width="225" y="204" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-89" parent="NZPPFZEXmw3su-86euV2-81" style="line;strokeWidth=1;fillColor=none;spacingLeft=3;spacingRight=3;rotatable=0;points=[];strokeColor=inherit;" vertex="1">
+          <mxGeometry height="24" width="225" y="228" as="geometry" />
+        </mxCell>
+        <UserObject label="&lt;b&gt;DataCollectionPlan&lt;/b&gt;" mermaidId="n:DataCollectionPlan" mermaidBaseStyle="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" mermaidBaseValue="&lt;b&gt;DataCollectionPlan&lt;/b&gt;" id="NZPPFZEXmw3su-86euV2-90">
+          <mxCell parent="NZPPFZEXmw3su-86euV2-1" style="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" vertex="1">
+            <mxGeometry height="312" width="389" x="1457" y="864" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <mxCell id="NZPPFZEXmw3su-86euV2-91" parent="NZPPFZEXmw3su-86euV2-90" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+string DcpId" vertex="1">
+          <mxGeometry height="24" width="389" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-92" parent="NZPPFZEXmw3su-86euV2-90" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+DCPDefinition Definition" vertex="1">
+          <mxGeometry height="24" width="389" y="84" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-93" parent="NZPPFZEXmw3su-86euV2-90" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+DCPState State" vertex="1">
+          <mxGeometry height="24" width="389" y="108" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-94" parent="NZPPFZEXmw3su-86euV2-90" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+Timestamp CreatedTime" vertex="1">
+          <mxGeometry height="24" width="389" y="132" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-95" parent="NZPPFZEXmw3su-86euV2-90" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+Timestamp? ActivatedTime" vertex="1">
+          <mxGeometry height="24" width="389" y="156" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-96" parent="NZPPFZEXmw3su-86euV2-90" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+Timestamp? DeactivatedTime" vertex="1">
+          <mxGeometry height="24" width="389" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-97" parent="NZPPFZEXmw3su-86euV2-90" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="-List&lt;DataSample&gt; SampleBuffer" vertex="1">
+          <mxGeometry height="24" width="389" y="204" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-98" parent="NZPPFZEXmw3su-86euV2-90" style="line;strokeWidth=1;fillColor=none;spacingLeft=3;spacingRight=3;rotatable=0;points=[];strokeColor=inherit;" vertex="1">
+          <mxGeometry height="24" width="389" y="228" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-99" parent="NZPPFZEXmw3su-86euV2-90" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+AddSample(DataSample) void" vertex="1">
+          <mxGeometry height="24" width="389" y="252" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-100" parent="NZPPFZEXmw3su-86euV2-90" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+CollectSamples() DataSampleCollection?" vertex="1">
+          <mxGeometry height="24" width="389" y="276" as="geometry" />
+        </mxCell>
+        <UserObject label="&lt;b&gt;DCPDefinition&lt;/b&gt;" mermaidId="n:DCPDefinition" mermaidBaseStyle="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" mermaidBaseValue="&lt;b&gt;DCPDefinition&lt;/b&gt;" id="NZPPFZEXmw3su-86euV2-101">
+          <mxCell parent="NZPPFZEXmw3su-86euV2-1" style="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" vertex="1">
+            <mxGeometry height="264" width="264" x="1510" y="1234" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <mxCell id="NZPPFZEXmw3su-86euV2-102" parent="NZPPFZEXmw3su-86euV2-101" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+string DcpId" vertex="1">
+          <mxGeometry height="24" width="264" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-103" parent="NZPPFZEXmw3su-86euV2-101" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+List&lt;string&gt; ParameterIds" vertex="1">
+          <mxGeometry height="24" width="264" y="84" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-104" parent="NZPPFZEXmw3su-86euV2-101" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+int SamplingIntervalMs" vertex="1">
+          <mxGeometry height="24" width="264" y="108" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-105" parent="NZPPFZEXmw3su-86euV2-101" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+int ReportingIntervalMs" vertex="1">
+          <mxGeometry height="24" width="264" y="132" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-106" parent="NZPPFZEXmw3su-86euV2-101" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+string? TriggerCondition" vertex="1">
+          <mxGeometry height="24" width="264" y="156" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-107" parent="NZPPFZEXmw3su-86euV2-101" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+string? Description" vertex="1">
+          <mxGeometry height="24" width="264" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-108" parent="NZPPFZEXmw3su-86euV2-101" style="line;strokeWidth=1;fillColor=none;spacingLeft=3;spacingRight=3;rotatable=0;points=[];strokeColor=inherit;" vertex="1">
+          <mxGeometry height="24" width="264" y="204" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-109" parent="NZPPFZEXmw3su-86euV2-101" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+Validate() void" vertex="1">
+          <mxGeometry height="24" width="264" y="228" as="geometry" />
+        </mxCell>
+        <UserObject label="&lt;b&gt;EqSDSerializer&lt;/b&gt;" mermaidId="n:EqSDSerializer" mermaidBaseStyle="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" mermaidBaseValue="&lt;b&gt;EqSDSerializer&lt;/b&gt;" id="NZPPFZEXmw3su-86euV2-110">
+          <mxCell parent="NZPPFZEXmw3su-86euV2-1" style="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" vertex="1">
+            <mxGeometry height="192" width="378" x="1001" y="54" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <mxCell id="NZPPFZEXmw3su-86euV2-111" parent="NZPPFZEXmw3su-86euV2-110" style="line;strokeWidth=1;fillColor=none;spacingLeft=3;spacingRight=3;rotatable=0;points=[];strokeColor=inherit;" vertex="1">
+          <mxGeometry height="24" width="378" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-112" parent="NZPPFZEXmw3su-86euV2-110" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+static Serialize(EqSDModel) string" vertex="1">
+          <mxGeometry height="24" width="378" y="84" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-113" parent="NZPPFZEXmw3su-86euV2-110" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+static Deserialize(string) EqSDModel" vertex="1">
+          <mxGeometry height="24" width="378" y="108" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-114" parent="NZPPFZEXmw3su-86euV2-110" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+static LoadFromFile(string) EqSDModel" vertex="1">
+          <mxGeometry height="24" width="378" y="132" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-115" parent="NZPPFZEXmw3su-86euV2-110" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+static SaveToFile(EqSDModel, string) void" vertex="1">
+          <mxGeometry height="24" width="378" y="156" as="geometry" />
+        </mxCell>
+        <UserObject label="&lt;b&gt;IParameterProvider&lt;/b&gt;" mermaidId="n:IParameterProvider" mermaidBaseStyle="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=72;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;spacingTop=24;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" mermaidBaseValue="&lt;b&gt;IParameterProvider&lt;/b&gt;" id="NZPPFZEXmw3su-86euV2-116">
+          <mxCell parent="NZPPFZEXmw3su-86euV2-1" style="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=72;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;spacingTop=24;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" vertex="1">
+            <mxGeometry height="168" width="552" x="2860" y="490" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <mxCell id="NZPPFZEXmw3su-86euV2-117" parent="NZPPFZEXmw3su-86euV2-116" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=16;movable=0;resizable=0;rotatable=0;points=[];fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="«interface»" vertex="1">
+          <mxGeometry height="24" width="552" y="12" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-118" parent="NZPPFZEXmw3su-86euV2-116" style="line;strokeWidth=1;fillColor=none;spacingLeft=3;spacingRight=3;rotatable=0;points=[];strokeColor=inherit;" vertex="1">
+          <mxGeometry height="24" width="552" y="84" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-119" parent="NZPPFZEXmw3su-86euV2-116" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+GetParameterValue(string) object?" vertex="1">
+          <mxGeometry height="24" width="552" y="108" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-120" parent="NZPPFZEXmw3su-86euV2-116" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+SubscribeParameterChange(string, Action&lt;object&gt;) IDisposable" vertex="1">
+          <mxGeometry height="24" width="552" y="132" as="geometry" />
+        </mxCell>
+        <UserObject label="&lt;b&gt;IEventProvider&lt;/b&gt;" mermaidId="n:IEventProvider" mermaidBaseStyle="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=72;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;spacingTop=24;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" mermaidBaseValue="&lt;b&gt;IEventProvider&lt;/b&gt;" id="NZPPFZEXmw3su-86euV2-121">
+          <mxCell parent="NZPPFZEXmw3su-86euV2-1" style="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=72;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;spacingTop=24;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" vertex="1">
+            <mxGeometry height="168" width="552" x="3462" y="490" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <mxCell id="NZPPFZEXmw3su-86euV2-122" parent="NZPPFZEXmw3su-86euV2-121" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=16;movable=0;resizable=0;rotatable=0;points=[];fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="«interface»" vertex="1">
+          <mxGeometry height="24" width="552" y="12" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-123" parent="NZPPFZEXmw3su-86euV2-121" style="line;strokeWidth=1;fillColor=none;spacingLeft=3;spacingRight=3;rotatable=0;points=[];strokeColor=inherit;" vertex="1">
+          <mxGeometry height="24" width="552" y="84" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-124" parent="NZPPFZEXmw3su-86euV2-121" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+SubscribeEvent(string, Action&lt;EventData&gt;) IDisposable" vertex="1">
+          <mxGeometry height="24" width="552" y="108" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-125" parent="NZPPFZEXmw3su-86euV2-121" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+GetEventHistory(string, Timestamp, Timestamp) List&lt;EventData&gt;" vertex="1">
+          <mxGeometry height="24" width="552" y="132" as="geometry" />
+        </mxCell>
+        <UserObject label="&lt;b&gt;ITraceProvider&lt;/b&gt;" mermaidId="n:ITraceProvider" mermaidBaseStyle="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=72;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;spacingTop=24;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" mermaidBaseValue="&lt;b&gt;ITraceProvider&lt;/b&gt;" id="NZPPFZEXmw3su-86euV2-126">
+          <mxCell parent="NZPPFZEXmw3su-86euV2-1" style="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=72;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;spacingTop=24;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" vertex="1">
+            <mxGeometry height="168" width="382" x="4064" y="490" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <mxCell id="NZPPFZEXmw3su-86euV2-127" parent="NZPPFZEXmw3su-86euV2-126" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=16;movable=0;resizable=0;rotatable=0;points=[];fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="«interface»" vertex="1">
+          <mxGeometry height="24" width="382" y="12" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-128" parent="NZPPFZEXmw3su-86euV2-126" style="line;strokeWidth=1;fillColor=none;spacingLeft=3;spacingRight=3;rotatable=0;points=[];strokeColor=inherit;" vertex="1">
+          <mxGeometry height="24" width="382" y="84" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-129" parent="NZPPFZEXmw3su-86euV2-126" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+StartCapture(string, int) Task&lt;TraceData&gt;" vertex="1">
+          <mxGeometry height="24" width="382" y="108" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-130" parent="NZPPFZEXmw3su-86euV2-126" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+StopCapture(string) void" vertex="1">
+          <mxGeometry height="24" width="382" y="132" as="geometry" />
+        </mxCell>
+        <UserObject label="&lt;b&gt;MockDataProvider&lt;/b&gt;" mermaidId="n:MockDataProvider" mermaidBaseStyle="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" mermaidBaseValue="&lt;b&gt;MockDataProvider&lt;/b&gt;" id="NZPPFZEXmw3su-86euV2-131">
+          <mxCell parent="NZPPFZEXmw3su-86euV2-1" style="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" vertex="1">
+            <mxGeometry height="168" width="323" x="3208" y="54" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <mxCell id="NZPPFZEXmw3su-86euV2-132" parent="NZPPFZEXmw3su-86euV2-131" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+implements IParameterProvider" vertex="1">
+          <mxGeometry height="24" width="323" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-133" parent="NZPPFZEXmw3su-86euV2-131" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+implements IEventProvider" vertex="1">
+          <mxGeometry height="24" width="323" y="84" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-134" parent="NZPPFZEXmw3su-86euV2-131" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+implements ITraceProvider" vertex="1">
+          <mxGeometry height="24" width="323" y="108" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-135" parent="NZPPFZEXmw3su-86euV2-131" style="line;strokeWidth=1;fillColor=none;spacingLeft=3;spacingRight=3;rotatable=0;points=[];strokeColor=inherit;" vertex="1">
+          <mxGeometry height="24" width="323" y="132" as="geometry" />
+        </mxCell>
+        <UserObject label="&lt;b&gt;TlsCertificateProvider&lt;/b&gt;" mermaidId="n:TlsCertificateProvider" mermaidBaseStyle="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" mermaidBaseValue="&lt;b&gt;TlsCertificateProvider&lt;/b&gt;" id="NZPPFZEXmw3su-86euV2-136">
+          <mxCell parent="NZPPFZEXmw3su-86euV2-1" style="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" vertex="1">
+            <mxGeometry height="216" width="377" x="2970" y="1282" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <mxCell id="NZPPFZEXmw3su-86euV2-137" parent="NZPPFZEXmw3su-86euV2-136" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="-string _certificatePath" vertex="1">
+          <mxGeometry height="24" width="377" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-138" parent="NZPPFZEXmw3su-86euV2-136" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="-string? _certificatePassword" vertex="1">
+          <mxGeometry height="24" width="377" y="84" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-139" parent="NZPPFZEXmw3su-86euV2-136" style="line;strokeWidth=1;fillColor=none;spacingLeft=3;spacingRight=3;rotatable=0;points=[];strokeColor=inherit;" vertex="1">
+          <mxGeometry height="24" width="377" y="108" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-140" parent="NZPPFZEXmw3su-86euV2-136" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+TlsCertificateProvider(string, string?)" vertex="1">
+          <mxGeometry height="24" width="377" y="132" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-141" parent="NZPPFZEXmw3su-86euV2-136" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+LoadCertificate() X509Certificate2" vertex="1">
+          <mxGeometry height="24" width="377" y="156" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-142" parent="NZPPFZEXmw3su-86euV2-136" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+ValidateCertificate() bool" vertex="1">
+          <mxGeometry height="24" width="377" y="180" as="geometry" />
+        </mxCell>
+        <UserObject label="&lt;b&gt;PasswordValidator&lt;/b&gt;" mermaidId="n:PasswordValidator" mermaidBaseStyle="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" mermaidBaseValue="&lt;b&gt;PasswordValidator&lt;/b&gt;" id="NZPPFZEXmw3su-86euV2-143">
+          <mxCell parent="NZPPFZEXmw3su-86euV2-1" style="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" vertex="1">
+            <mxGeometry height="216" width="364" x="3396" y="1282" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <mxCell id="NZPPFZEXmw3su-86euV2-144" parent="NZPPFZEXmw3su-86euV2-143" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="-Dictionary&lt;string,string&gt; _credentials" vertex="1">
+          <mxGeometry height="24" width="364" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-145" parent="NZPPFZEXmw3su-86euV2-143" style="line;strokeWidth=1;fillColor=none;spacingLeft=3;spacingRight=3;rotatable=0;points=[];strokeColor=inherit;" vertex="1">
+          <mxGeometry height="24" width="364" y="84" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-146" parent="NZPPFZEXmw3su-86euV2-143" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+PasswordValidator()" vertex="1">
+          <mxGeometry height="24" width="364" y="108" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-147" parent="NZPPFZEXmw3su-86euV2-143" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+PasswordValidator(string, string)" vertex="1">
+          <mxGeometry height="24" width="364" y="132" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-148" parent="NZPPFZEXmw3su-86euV2-143" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+AddCredential(string, string) void" vertex="1">
+          <mxGeometry height="24" width="364" y="156" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-149" parent="NZPPFZEXmw3su-86euV2-143" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+Validate(string, string) bool" vertex="1">
+          <mxGeometry height="24" width="364" y="180" as="geometry" />
+        </mxCell>
+        <UserObject label="&lt;b&gt;EDAServerConfig&lt;/b&gt;" mermaidId="n:EDAServerConfig" mermaidBaseStyle="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" mermaidBaseValue="&lt;b&gt;EDAServerConfig&lt;/b&gt;" id="NZPPFZEXmw3su-86euV2-150">
+          <mxCell parent="NZPPFZEXmw3su-86euV2-1" style="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" vertex="1">
+            <mxGeometry height="360" width="345" x="3396" y="860" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <mxCell id="NZPPFZEXmw3su-86euV2-151" parent="NZPPFZEXmw3su-86euV2-150" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+int Port" vertex="1">
+          <mxGeometry height="24" width="345" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-152" parent="NZPPFZEXmw3su-86euV2-150" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+string? CertificatePath" vertex="1">
+          <mxGeometry height="24" width="345" y="84" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-153" parent="NZPPFZEXmw3su-86euV2-150" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+string? CertificatePassword" vertex="1">
+          <mxGeometry height="24" width="345" y="108" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-154" parent="NZPPFZEXmw3su-86euV2-150" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+int MaxConcurrentSessions" vertex="1">
+          <mxGeometry height="24" width="345" y="132" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-155" parent="NZPPFZEXmw3su-86euV2-150" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+bool EnableUsernamePasswordAuth" vertex="1">
+          <mxGeometry height="24" width="345" y="156" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-156" parent="NZPPFZEXmw3su-86euV2-150" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+bool EnableCertificateAuth" vertex="1">
+          <mxGeometry height="24" width="345" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-157" parent="NZPPFZEXmw3su-86euV2-150" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+string? CACertificatePath" vertex="1">
+          <mxGeometry height="24" width="345" y="204" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-158" parent="NZPPFZEXmw3su-86euV2-150" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+string? EqSDModelPath" vertex="1">
+          <mxGeometry height="24" width="345" y="228" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-159" parent="NZPPFZEXmw3su-86euV2-150" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+string? NTPServer" vertex="1">
+          <mxGeometry height="24" width="345" y="252" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-160" parent="NZPPFZEXmw3su-86euV2-150" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+string? LogFilePath" vertex="1">
+          <mxGeometry height="24" width="345" y="276" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-161" parent="NZPPFZEXmw3su-86euV2-150" style="line;strokeWidth=1;fillColor=none;spacingLeft=3;spacingRight=3;rotatable=0;points=[];strokeColor=inherit;" vertex="1">
+          <mxGeometry height="24" width="345" y="300" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-162" parent="NZPPFZEXmw3su-86euV2-150" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+Validate() void" vertex="1">
+          <mxGeometry height="24" width="345" y="324" as="geometry" />
+        </mxCell>
+        <UserObject label="&lt;b&gt;DCPState&lt;/b&gt;" mermaidId="n:DCPState" mermaidBaseStyle="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=72;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;spacingTop=24;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" mermaidBaseValue="&lt;b&gt;DCPState&lt;/b&gt;" id="NZPPFZEXmw3su-86euV2-163">
+          <mxCell parent="NZPPFZEXmw3su-86euV2-1" style="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=72;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;spacingTop=24;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" vertex="1">
+            <mxGeometry height="264" width="168" x="3791" y="860" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <mxCell id="NZPPFZEXmw3su-86euV2-164" parent="NZPPFZEXmw3su-86euV2-163" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=16;movable=0;resizable=0;rotatable=0;points=[];fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="«enumeration»" vertex="1">
+          <mxGeometry height="24" width="168" y="12" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-165" parent="NZPPFZEXmw3su-86euV2-163" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="Created" vertex="1">
+          <mxGeometry height="24" width="168" y="84" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-166" parent="NZPPFZEXmw3su-86euV2-163" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="Activating" vertex="1">
+          <mxGeometry height="24" width="168" y="108" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-167" parent="NZPPFZEXmw3su-86euV2-163" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="Active" vertex="1">
+          <mxGeometry height="24" width="168" y="132" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-168" parent="NZPPFZEXmw3su-86euV2-163" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="Deactivating" vertex="1">
+          <mxGeometry height="24" width="168" y="156" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-169" parent="NZPPFZEXmw3su-86euV2-163" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="Inactive" vertex="1">
+          <mxGeometry height="24" width="168" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-170" parent="NZPPFZEXmw3su-86euV2-163" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="Error" vertex="1">
+          <mxGeometry height="24" width="168" y="204" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-171" parent="NZPPFZEXmw3su-86euV2-163" style="line;strokeWidth=1;fillColor=none;spacingLeft=3;spacingRight=3;rotatable=0;points=[];strokeColor=inherit;" vertex="1">
+          <mxGeometry height="24" width="168" y="228" as="geometry" />
+        </mxCell>
+        <UserObject label="&lt;b&gt;SessionState&lt;/b&gt;" mermaidId="n:SessionState" mermaidBaseStyle="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=72;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;spacingTop=24;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" mermaidBaseValue="&lt;b&gt;SessionState&lt;/b&gt;" id="NZPPFZEXmw3su-86euV2-172">
+          <mxCell parent="NZPPFZEXmw3su-86euV2-1" style="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=72;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;spacingTop=24;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" vertex="1">
+            <mxGeometry height="216" width="173" x="4009" y="860" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <mxCell id="NZPPFZEXmw3su-86euV2-173" parent="NZPPFZEXmw3su-86euV2-172" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=16;movable=0;resizable=0;rotatable=0;points=[];fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="«enumeration»" vertex="1">
+          <mxGeometry height="24" width="173" y="12" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-174" parent="NZPPFZEXmw3su-86euV2-172" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="Active" vertex="1">
+          <mxGeometry height="24" width="173" y="84" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-175" parent="NZPPFZEXmw3su-86euV2-172" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="Disconnected" vertex="1">
+          <mxGeometry height="24" width="173" y="108" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-176" parent="NZPPFZEXmw3su-86euV2-172" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="Timeout" vertex="1">
+          <mxGeometry height="24" width="173" y="132" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-177" parent="NZPPFZEXmw3su-86euV2-172" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="Error" vertex="1">
+          <mxGeometry height="24" width="173" y="156" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-178" parent="NZPPFZEXmw3su-86euV2-172" style="line;strokeWidth=1;fillColor=none;spacingLeft=3;spacingRight=3;rotatable=0;points=[];strokeColor=inherit;" vertex="1">
+          <mxGeometry height="24" width="173" y="180" as="geometry" />
+        </mxCell>
+        <UserObject label="&lt;b&gt;Timestamp&lt;/b&gt;" mermaidId="n:Timestamp" mermaidBaseStyle="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" mermaidBaseValue="&lt;b&gt;Timestamp&lt;/b&gt;" id="NZPPFZEXmw3su-86euV2-179">
+          <mxCell parent="NZPPFZEXmw3su-86euV2-1" style="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" vertex="1">
+            <mxGeometry height="216" width="299" x="4232" y="860" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <mxCell id="NZPPFZEXmw3su-86euV2-180" parent="NZPPFZEXmw3su-86euV2-179" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+DateTime Value" vertex="1">
+          <mxGeometry height="24" width="299" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-181" parent="NZPPFZEXmw3su-86euV2-179" style="line;strokeWidth=1;fillColor=none;spacingLeft=3;spacingRight=3;rotatable=0;points=[];strokeColor=inherit;" vertex="1">
+          <mxGeometry height="24" width="299" y="84" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-182" parent="NZPPFZEXmw3su-86euV2-179" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+static Now() Timestamp" vertex="1">
+          <mxGeometry height="24" width="299" y="108" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-183" parent="NZPPFZEXmw3su-86euV2-179" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+ParseIso8601(string) Timestamp" vertex="1">
+          <mxGeometry height="24" width="299" y="132" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-184" parent="NZPPFZEXmw3su-86euV2-179" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+ToIso8601() string" vertex="1">
+          <mxGeometry height="24" width="299" y="156" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-185" parent="NZPPFZEXmw3su-86euV2-179" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+ToUnixTimeMilliseconds() long" vertex="1">
+          <mxGeometry height="24" width="299" y="180" as="geometry" />
+        </mxCell>
+        <UserObject label="&lt;b&gt;DataSample&lt;/b&gt;" mermaidId="n:DataSample" mermaidBaseStyle="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" mermaidBaseValue="&lt;b&gt;DataSample&lt;/b&gt;" id="NZPPFZEXmw3su-86euV2-186">
+          <mxCell parent="NZPPFZEXmw3su-86euV2-1" style="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" vertex="1">
+            <mxGeometry height="240" width="252" x="2108" y="1230" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <mxCell id="NZPPFZEXmw3su-86euV2-187" parent="NZPPFZEXmw3su-86euV2-186" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+string ParameterId" vertex="1">
+          <mxGeometry height="24" width="252" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-188" parent="NZPPFZEXmw3su-86euV2-186" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+object Value" vertex="1">
+          <mxGeometry height="24" width="252" y="84" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-189" parent="NZPPFZEXmw3su-86euV2-186" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+Timestamp Timestamp" vertex="1">
+          <mxGeometry height="24" width="252" y="108" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-190" parent="NZPPFZEXmw3su-86euV2-186" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+required string DataType" vertex="1">
+          <mxGeometry height="24" width="252" y="132" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-191" parent="NZPPFZEXmw3su-86euV2-186" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+string? Unit" vertex="1">
+          <mxGeometry height="24" width="252" y="156" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-192" parent="NZPPFZEXmw3su-86euV2-186" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+bool IsGoodQuality" vertex="1">
+          <mxGeometry height="24" width="252" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-193" parent="NZPPFZEXmw3su-86euV2-186" style="line;strokeWidth=1;fillColor=none;spacingLeft=3;spacingRight=3;rotatable=0;points=[];strokeColor=inherit;" vertex="1">
+          <mxGeometry height="24" width="252" y="204" as="geometry" />
+        </mxCell>
+        <UserObject label="&lt;b&gt;DataSampleCollection&lt;/b&gt;" mermaidId="n:DataSampleCollection" mermaidBaseStyle="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" mermaidBaseValue="&lt;b&gt;DataSampleCollection&lt;/b&gt;" id="NZPPFZEXmw3su-86euV2-194">
+          <mxCell parent="NZPPFZEXmw3su-86euV2-1" style="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" vertex="1">
+            <mxGeometry height="168" width="346" x="2014" y="864" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <mxCell id="NZPPFZEXmw3su-86euV2-195" parent="NZPPFZEXmw3su-86euV2-194" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+List&lt;DataSample&gt; Samples" vertex="1">
+          <mxGeometry height="24" width="346" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-196" parent="NZPPFZEXmw3su-86euV2-194" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+Timestamp CollectionTimestamp" vertex="1">
+          <mxGeometry height="24" width="346" y="84" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-197" parent="NZPPFZEXmw3su-86euV2-194" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+string DcpId" vertex="1">
+          <mxGeometry height="24" width="346" y="108" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-198" parent="NZPPFZEXmw3su-86euV2-194" style="line;strokeWidth=1;fillColor=none;spacingLeft=3;spacingRight=3;rotatable=0;points=[];strokeColor=inherit;" vertex="1">
+          <mxGeometry height="24" width="346" y="132" as="geometry" />
+        </mxCell>
+        <UserObject label="&lt;b&gt;SEMIStandardInfo&lt;/b&gt;" mermaidId="n:SEMIStandardInfo" mermaidBaseStyle="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" mermaidBaseValue="&lt;b&gt;SEMIStandardInfo&lt;/b&gt;" id="NZPPFZEXmw3su-86euV2-199">
+          <mxCell parent="NZPPFZEXmw3su-86euV2-1" style="swimlane;html=1;fontStyle=1;fontSize=16;align=center;verticalAlign=middle;horizontal=1;childLayout=stackLayout;startSize=48;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginTop=12;marginBottom=12;stackSpacing=0;swimlaneFillColor=light-dark(#ECECFF,#1f2020);whiteSpace=wrap;fillColor=light-dark(#ECECFF,#1f2020);strokeColor=light-dark(#9370DB,#cccccc);fontColor=light-dark(#333333,#cccccc);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;" vertex="1">
+            <mxGeometry height="216" width="225" x="1170" y="864" as="geometry" />
+          </mxCell>
+        </UserObject>
+        <mxCell id="NZPPFZEXmw3su-86euV2-200" parent="NZPPFZEXmw3su-86euV2-199" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+string E120Version" vertex="1">
+          <mxGeometry height="24" width="225" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-201" parent="NZPPFZEXmw3su-86euV2-199" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+string E125Version" vertex="1">
+          <mxGeometry height="24" width="225" y="84" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-202" parent="NZPPFZEXmw3su-86euV2-199" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+string E132Version" vertex="1">
+          <mxGeometry height="24" width="225" y="108" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-203" parent="NZPPFZEXmw3su-86euV2-199" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+string E134Version" vertex="1">
+          <mxGeometry height="24" width="225" y="132" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-204" parent="NZPPFZEXmw3su-86euV2-199" style="text;fontSize=16;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=12;spacingBottom=2;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);" value="+string E164Version" vertex="1">
+          <mxGeometry height="24" width="225" y="156" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-205" parent="NZPPFZEXmw3su-86euV2-199" style="line;strokeWidth=1;fillColor=none;spacingLeft=3;spacingRight=3;rotatable=0;points=[];strokeColor=inherit;" vertex="1">
+          <mxGeometry height="24" width="225" y="180" as="geometry" />
+        </mxCell>
+        <UserObject label="" mermaidId="e:EDAServerController-&gt;DCPManager#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=classic;endSize=9;strokeColor=light-dark(#333333,#cccccc);exitX=0.95;exitY=1;entryX=0;entryY=0.07;" mermaidBaseValue="" id="NZPPFZEXmw3su-86euV2-206">
+          <mxCell edge="1" parent="NZPPFZEXmw3su-86euV2-1" source="NZPPFZEXmw3su-86euV2-2" style="curved=1;startArrow=none;endArrow=classic;endSize=9;strokeColor=light-dark(#333333,#cccccc);exitX=0.95;exitY=1;entryX=0;entryY=0.07;rounded=0;" target="NZPPFZEXmw3su-86euV2-35">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="1037" y="427" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:EDAServerController-&gt;EqSDModel#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=classic;endSize=9;strokeColor=light-dark(#333333,#cccccc);exitX=0.27;exitY=1;entryX=0;entryY=0;" mermaidBaseValue="" id="NZPPFZEXmw3su-86euV2-207">
+          <mxCell edge="1" parent="NZPPFZEXmw3su-86euV2-1" source="NZPPFZEXmw3su-86euV2-2" style="curved=1;startArrow=none;endArrow=classic;endSize=9;strokeColor=light-dark(#333333,#cccccc);exitX=0.27;exitY=1;entryX=0;entryY=0;rounded=0;" target="NZPPFZEXmw3su-86euV2-53">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="530" y="427" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:SessionManager-&gt;EDASession#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=classic;endSize=9;strokeColor=light-dark(#333333,#cccccc);exitX=0.45;exitY=1;entryX=0.42;entryY=0;" mermaidBaseValue="" id="NZPPFZEXmw3su-86euV2-208">
+          <mxCell edge="1" parent="NZPPFZEXmw3su-86euV2-1" source="NZPPFZEXmw3su-86euV2-12" style="curved=1;startArrow=none;endArrow=classic;endSize=9;strokeColor=light-dark(#333333,#cccccc);exitX=0.45;exitY=1;entryX=0.42;entryY=0;rounded=0;" target="NZPPFZEXmw3su-86euV2-23">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="192" y="427" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:DCPManager-&gt;DataCollectionPlan#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=classic;endSize=9;strokeColor=light-dark(#333333,#cccccc);exitX=0.13;exitY=1;entryX=0;entryY=0.02;" mermaidBaseValue="" id="NZPPFZEXmw3su-86euV2-209">
+          <mxCell edge="1" parent="NZPPFZEXmw3su-86euV2-1" source="NZPPFZEXmw3su-86euV2-35" style="curved=1;startArrow=none;endArrow=classic;endSize=9;strokeColor=light-dark(#333333,#cccccc);exitX=0.13;exitY=1;entryX=0;entryY=0.02;rounded=0;" target="NZPPFZEXmw3su-86euV2-90">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="1403" y="827" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:DataCollectionPlan-&gt;DCPDefinition#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=classic;endSize=9;strokeColor=light-dark(#333333,#cccccc);exitX=0.48;exitY=1;entryX=0.5;entryY=0;" mermaidBaseValue="" id="NZPPFZEXmw3su-86euV2-210">
+          <mxCell edge="1" parent="NZPPFZEXmw3su-86euV2-1" source="NZPPFZEXmw3su-86euV2-90" style="curved=1;startArrow=none;endArrow=classic;endSize=9;strokeColor=light-dark(#333333,#cccccc);exitX=0.48;exitY=1;entryX=0.5;entryY=0;rounded=0;" target="NZPPFZEXmw3su-86euV2-101">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="1642" y="1201" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:DataCollectionPlan-&gt;DataSample#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=classic;endSize=9;strokeColor=light-dark(#333333,#cccccc);exitX=1;exitY=0.6;entryX=0;entryY=0.44;" mermaidBaseValue="" id="NZPPFZEXmw3su-86euV2-211">
+          <mxCell edge="1" parent="NZPPFZEXmw3su-86euV2-1" source="NZPPFZEXmw3su-86euV2-90" style="curved=1;startArrow=none;endArrow=classic;endSize=9;strokeColor=light-dark(#333333,#cccccc);exitX=1;exitY=0.6;entryX=0;entryY=0.44;rounded=0;" target="NZPPFZEXmw3su-86euV2-186">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="1933" y="1270" />
+                <mxPoint x="1970" y="1310" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:DataSampleCollection-&gt;DataSample#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=classic;endSize=9;strokeColor=light-dark(#333333,#cccccc);exitX=0.5;exitY=1;entryX=0;entryY=0.43;" mermaidBaseValue="" id="NZPPFZEXmw3su-86euV2-212">
+          <mxCell edge="1" parent="NZPPFZEXmw3su-86euV2-1" source="NZPPFZEXmw3su-86euV2-194" style="curved=1;startArrow=none;endArrow=classic;endSize=9;strokeColor=light-dark(#333333,#cccccc);exitX=0.5;exitY=1;entryX=0;entryY=0.43;rounded=0;" target="NZPPFZEXmw3su-86euV2-186">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="2000" y="1170" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:SampleEngine-&gt;DCPManager#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=classic;endSize=9;strokeColor=light-dark(#333333,#cccccc);exitX=0;exitY=0.63;entryX=0.89;entryY=0;" mermaidBaseValue="" id="NZPPFZEXmw3su-86euV2-213">
+          <mxCell edge="1" parent="NZPPFZEXmw3su-86euV2-1" source="NZPPFZEXmw3su-86euV2-44" style="curved=1;startArrow=none;endArrow=classic;endSize=9;strokeColor=light-dark(#333333,#cccccc);exitX=0;exitY=0.63;entryX=0.89;entryY=0;rounded=0;" target="NZPPFZEXmw3su-86euV2-35">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="1513" y="407" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:SampleEngine-&gt;DataSample#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=classic;endSize=9;strokeColor=light-dark(#333333,#cccccc);exitX=1;exitY=0.63;entryX=1;entryY=0.21;" mermaidBaseValue="" id="NZPPFZEXmw3su-86euV2-214">
+          <mxCell edge="1" parent="NZPPFZEXmw3su-86euV2-1" source="NZPPFZEXmw3su-86euV2-44" style="curved=1;startArrow=none;endArrow=classic;endSize=9;strokeColor=light-dark(#333333,#cccccc);exitX=1;exitY=0.63;entryX=1;entryY=0.21;rounded=0;" target="NZPPFZEXmw3su-86euV2-186">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="2343" y="560" />
+                <mxPoint x="2420" y="880" />
+                <mxPoint x="2410" y="1060" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:EqSDModel-&gt;ParameterDefinition#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=classic;endSize=9;strokeColor=light-dark(#333333,#cccccc);exitX=0;exitY=0.84;entryX=0.45;entryY=0;" mermaidBaseValue="" id="NZPPFZEXmw3su-86euV2-215">
+          <mxCell edge="1" parent="NZPPFZEXmw3su-86euV2-1" source="NZPPFZEXmw3su-86euV2-53" style="curved=1;startArrow=none;endArrow=classic;endSize=9;strokeColor=light-dark(#333333,#cccccc);exitX=0;exitY=0.84;entryX=0.45;entryY=0;rounded=0;" target="NZPPFZEXmw3su-86euV2-63">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="418" y="837" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:EqSDModel-&gt;EventDefinition#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=classic;endSize=9;strokeColor=light-dark(#333333,#cccccc);exitX=0.12;exitY=1;entryX=0.19;entryY=0;" mermaidBaseValue="" id="NZPPFZEXmw3su-86euV2-216">
+          <mxCell edge="1" parent="NZPPFZEXmw3su-86euV2-1" source="NZPPFZEXmw3su-86euV2-53" style="curved=1;startArrow=none;endArrow=classic;endSize=9;strokeColor=light-dark(#333333,#cccccc);exitX=0.12;exitY=1;entryX=0.19;entryY=0;rounded=0;" target="NZPPFZEXmw3su-86euV2-74">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="589" y="837" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:EqSDModel-&gt;TraceDefinition#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=classic;endSize=9;strokeColor=light-dark(#333333,#cccccc);exitX=0.68;exitY=1;entryX=0.13;entryY=0;" mermaidBaseValue="" id="NZPPFZEXmw3su-86euV2-217">
+          <mxCell edge="1" parent="NZPPFZEXmw3su-86euV2-1" source="NZPPFZEXmw3su-86euV2-53" style="curved=1;startArrow=none;endArrow=classic;endSize=9;strokeColor=light-dark(#333333,#cccccc);exitX=0.68;exitY=1;entryX=0.13;entryY=0;rounded=0;" target="NZPPFZEXmw3su-86euV2-81">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="864" y="837" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:EqSDModel-&gt;SEMIStandardInfo#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=classic;endSize=9;strokeColor=light-dark(#333333,#cccccc);exitX=1;exitY=0.55;entryX=0.5;entryY=0;" mermaidBaseValue="" id="NZPPFZEXmw3su-86euV2-218">
+          <mxCell edge="1" parent="NZPPFZEXmw3su-86euV2-1" source="NZPPFZEXmw3su-86euV2-53" style="curved=1;startArrow=none;endArrow=classic;endSize=9;strokeColor=light-dark(#333333,#cccccc);exitX=1;exitY=0.55;entryX=0.5;entryY=0;rounded=0;" target="NZPPFZEXmw3su-86euV2-199">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="1180" y="750" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:EqSDSerializer-&gt;EqSDModel#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=classic;endSize=9;strokeColor=light-dark(#333333,#cccccc);exitX=0.3;exitY=1;entryX=0.99;entryY=0;" mermaidBaseValue="" id="NZPPFZEXmw3su-86euV2-219">
+          <mxCell edge="1" parent="NZPPFZEXmw3su-86euV2-1" source="NZPPFZEXmw3su-86euV2-110" style="curved=1;startArrow=none;endArrow=classic;endSize=9;strokeColor=light-dark(#333333,#cccccc);exitX=0.3;exitY=1;entryX=0.99;entryY=0;rounded=0;" target="NZPPFZEXmw3su-86euV2-53">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="1017" y="427" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:MockDataProvider-&gt;IParameterProvider#0" mermaidBaseStyle="curved=1;dashed=1;startArrow=none;endArrow=mermaidExtension;endSize=17;endFill=0;strokeColor=light-dark(#333333,#cccccc);exitX=0.22;exitY=1;entryX=0.5;entryY=0;" mermaidBaseValue="" id="NZPPFZEXmw3su-86euV2-220">
+          <mxCell edge="1" parent="NZPPFZEXmw3su-86euV2-1" source="NZPPFZEXmw3su-86euV2-131" style="curved=1;dashed=1;startArrow=none;endArrow=mermaidExtension;endSize=17;endFill=0;strokeColor=light-dark(#333333,#cccccc);exitX=0.22;exitY=1;entryX=0.5;entryY=0;fixDash=1;rounded=0;" target="NZPPFZEXmw3su-86euV2-116">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="3136" y="403" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:MockDataProvider-&gt;IEventProvider#0" mermaidBaseStyle="curved=1;dashed=1;startArrow=none;endArrow=mermaidExtension;endSize=17;endFill=0;strokeColor=light-dark(#333333,#cccccc);exitX=0.94;exitY=1;entryX=0.5;entryY=0;" mermaidBaseValue="" id="NZPPFZEXmw3su-86euV2-221">
+          <mxCell edge="1" parent="NZPPFZEXmw3su-86euV2-1" source="NZPPFZEXmw3su-86euV2-131" style="curved=1;dashed=1;startArrow=none;endArrow=mermaidExtension;endSize=17;endFill=0;strokeColor=light-dark(#333333,#cccccc);exitX=0.94;exitY=1;entryX=0.5;entryY=0;fixDash=1;rounded=0;" target="NZPPFZEXmw3su-86euV2-121">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="3738" y="403" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:MockDataProvider-&gt;ITraceProvider#0" mermaidBaseStyle="curved=1;dashed=1;startArrow=none;endArrow=mermaidExtension;endSize=17;endFill=0;strokeColor=light-dark(#333333,#cccccc);exitX=1;exitY=0.74;entryX=0.5;entryY=0;" mermaidBaseValue="" id="NZPPFZEXmw3su-86euV2-222">
+          <mxCell edge="1" parent="NZPPFZEXmw3su-86euV2-1" source="NZPPFZEXmw3su-86euV2-131" style="curved=1;dashed=1;startArrow=none;endArrow=mermaidExtension;endSize=17;endFill=0;strokeColor=light-dark(#333333,#cccccc);exitX=1;exitY=0.74;entryX=0.5;entryY=0;fixDash=1;rounded=0;" target="NZPPFZEXmw3su-86euV2-126">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="4255" y="403" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:EDAServerConfig-&gt;PasswordValidator#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=classic;endSize=9;strokeColor=light-dark(#333333,#cccccc);exitX=0.52;exitY=1;entryX=0.5;entryY=0;" mermaidBaseValue="" id="NZPPFZEXmw3su-86euV2-223">
+          <mxCell edge="1" parent="NZPPFZEXmw3su-86euV2-1" source="NZPPFZEXmw3su-86euV2-150" style="curved=1;startArrow=none;endArrow=classic;endSize=9;strokeColor=light-dark(#333333,#cccccc);exitX=0.52;exitY=1;entryX=0.5;entryY=0;rounded=0;" target="NZPPFZEXmw3su-86euV2-143">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="3578" y="1185" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="" mermaidId="e:EDAServerConfig-&gt;TlsCertificateProvider#0" mermaidBaseStyle="curved=1;startArrow=none;endArrow=classic;endSize=9;strokeColor=light-dark(#333333,#cccccc);exitX=0;exitY=0.75;entryX=0.5;entryY=0;" mermaidBaseValue="" id="NZPPFZEXmw3su-86euV2-224">
+          <mxCell edge="1" parent="NZPPFZEXmw3su-86euV2-1" source="NZPPFZEXmw3su-86euV2-150" style="curved=1;startArrow=none;endArrow=classic;endSize=9;strokeColor=light-dark(#333333,#cccccc);exitX=0;exitY=0.75;entryX=0.5;entryY=0;rounded=0;" target="NZPPFZEXmw3su-86euV2-136">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="3158" y="1185" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <UserObject label="manages" mermaidId="e:SessionManager-&gt;EDASession#1" mermaidBaseStyle="curved=1;dashed=1;startArrow=none;endArrow=classic;endSize=9;strokeColor=light-dark(#333333,#cccccc);html=1;fontSize=16;labelBackgroundColor=light-dark(#ECECFF,#1f2020);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);exitX=0.91;exitY=1;entryX=1;entryY=0.11;" mermaidBaseValue="manages" id="NZPPFZEXmw3su-86euV2-225">
+          <mxCell edge="1" parent="NZPPFZEXmw3su-86euV2-1" source="NZPPFZEXmw3su-86euV2-12" style="curved=1;dashed=1;startArrow=none;endArrow=classic;endSize=9;strokeColor=light-dark(#333333,#cccccc);html=1;fontSize=16;labelBackgroundColor=light-dark(#ECECFF,#1f2020);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);exitX=0.91;exitY=1;entryX=1;entryY=0.11;fixDash=1;rounded=0;" target="NZPPFZEXmw3su-86euV2-23">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="434" y="427" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <mxCell id="NZPPFZEXmw3su-86euV2-226" parent="NZPPFZEXmw3su-86euV2-225" style="edgeLabel;resizable=0;labelBackgroundColor=none;fontSize=11;spacing=8;align=right;verticalAlign=top;" value="3+" vertex="1">
+          <mxGeometry relative="1" x="-1" as="geometry" />
+        </mxCell>
+        <UserObject label="contains" mermaidId="e:DCPManager-&gt;DataCollectionPlan#1" mermaidBaseStyle="curved=1;startArrow=mermaidDiamond;startSize=17;startFill=1;endArrow=none;strokeColor=light-dark(#333333,#cccccc);html=1;fontSize=16;labelBackgroundColor=light-dark(#ECECFF,#1f2020);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);exitX=1;exitY=0.63;entryX=1;entryY=0.4;" mermaidBaseValue="contains" id="NZPPFZEXmw3su-86euV2-227">
+          <mxCell edge="1" parent="NZPPFZEXmw3su-86euV2-1" source="NZPPFZEXmw3su-86euV2-35" style="curved=1;startArrow=mermaidDiamond;startSize=17;startFill=1;endArrow=none;strokeColor=light-dark(#333333,#cccccc);html=1;fontSize=16;labelBackgroundColor=light-dark(#ECECFF,#1f2020);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);exitX=1;exitY=0.63;entryX=1;entryY=0.4;rounded=0;" target="NZPPFZEXmw3su-86euV2-90">
+            <mxGeometry relative="1" x="0.2626" y="-52" as="geometry">
+              <mxPoint x="-1" y="1" as="offset" />
+              <Array as="points">
+                <mxPoint x="2124" y="760" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <mxCell id="NZPPFZEXmw3su-86euV2-228" parent="NZPPFZEXmw3su-86euV2-227" style="edgeLabel;resizable=0;labelBackgroundColor=none;fontSize=11;spacing=8;align=right;verticalAlign=top;" value="1" vertex="1">
+          <mxGeometry relative="1" x="-1" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-229" parent="NZPPFZEXmw3su-86euV2-227" style="edgeLabel;resizable=0;labelBackgroundColor=none;fontSize=11;spacing=8;align=left;verticalAlign=bottom;" value="n" vertex="1">
+          <mxGeometry relative="1" x="1" as="geometry" />
+        </mxCell>
+        <UserObject label="has" mermaidId="e:EqSDModel-&gt;ParameterDefinition#1" mermaidBaseStyle="curved=1;startArrow=mermaidDiamond;startSize=17;startFill=1;endArrow=none;strokeColor=light-dark(#333333,#cccccc);html=1;fontSize=16;labelBackgroundColor=light-dark(#ECECFF,#1f2020);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);exitX=0.06;exitY=1;entryX=0.92;entryY=0;" mermaidBaseValue="has" id="NZPPFZEXmw3su-86euV2-230">
+          <mxCell edge="1" parent="NZPPFZEXmw3su-86euV2-1" source="NZPPFZEXmw3su-86euV2-53" style="curved=1;startArrow=mermaidDiamond;startSize=17;startFill=1;endArrow=none;strokeColor=light-dark(#333333,#cccccc);html=1;fontSize=16;labelBackgroundColor=light-dark(#ECECFF,#1f2020);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);exitX=0.06;exitY=1;entryX=0.92;entryY=0;rounded=0;" target="NZPPFZEXmw3su-86euV2-63">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="557" y="837" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <mxCell id="NZPPFZEXmw3su-86euV2-231" parent="NZPPFZEXmw3su-86euV2-230" style="edgeLabel;resizable=0;labelBackgroundColor=none;fontSize=11;spacing=8;align=right;verticalAlign=top;" value="1" vertex="1">
+          <mxGeometry relative="1" x="-1" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-232" parent="NZPPFZEXmw3su-86euV2-230" style="edgeLabel;resizable=0;labelBackgroundColor=none;fontSize=11;spacing=8;align=left;verticalAlign=bottom;" value="n" vertex="1">
+          <mxGeometry relative="1" x="1" as="geometry" />
+        </mxCell>
+        <UserObject label="has" mermaidId="e:EqSDModel-&gt;EventDefinition#1" mermaidBaseStyle="curved=1;startArrow=mermaidDiamond;startSize=17;startFill=1;endArrow=none;strokeColor=light-dark(#333333,#cccccc);html=1;fontSize=16;labelBackgroundColor=light-dark(#ECECFF,#1f2020);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);exitX=0.5;exitY=1;entryX=0.65;entryY=0;" mermaidBaseValue="has" id="NZPPFZEXmw3su-86euV2-233">
+          <mxCell edge="1" parent="NZPPFZEXmw3su-86euV2-1" source="NZPPFZEXmw3su-86euV2-53" style="curved=1;startArrow=mermaidDiamond;startSize=17;startFill=1;endArrow=none;strokeColor=light-dark(#333333,#cccccc);html=1;fontSize=16;labelBackgroundColor=light-dark(#ECECFF,#1f2020);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);exitX=0.5;exitY=1;entryX=0.65;entryY=0;rounded=0;" target="NZPPFZEXmw3su-86euV2-74">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="773" y="837" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <mxCell id="NZPPFZEXmw3su-86euV2-234" parent="NZPPFZEXmw3su-86euV2-233" style="edgeLabel;resizable=0;labelBackgroundColor=none;fontSize=11;spacing=8;align=right;verticalAlign=top;" value="1" vertex="1">
+          <mxGeometry relative="1" x="-1" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-235" parent="NZPPFZEXmw3su-86euV2-233" style="edgeLabel;resizable=0;labelBackgroundColor=none;fontSize=11;spacing=8;align=left;verticalAlign=bottom;" value="n" vertex="1">
+          <mxGeometry relative="1" x="1" as="geometry" />
+        </mxCell>
+        <UserObject label="has" mermaidId="e:EqSDModel-&gt;TraceDefinition#1" mermaidBaseStyle="curved=1;startArrow=mermaidDiamond;startSize=17;startFill=1;endArrow=none;strokeColor=light-dark(#333333,#cccccc);html=1;fontSize=16;labelBackgroundColor=light-dark(#ECECFF,#1f2020);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);exitX=1;exitY=0.83;entryX=0.99;entryY=0;" mermaidBaseValue="has" id="NZPPFZEXmw3su-86euV2-236">
+          <mxCell edge="1" parent="NZPPFZEXmw3su-86euV2-1" source="NZPPFZEXmw3su-86euV2-53" style="curved=1;startArrow=mermaidDiamond;startSize=17;startFill=1;endArrow=none;strokeColor=light-dark(#333333,#cccccc);html=1;fontSize=16;labelBackgroundColor=light-dark(#ECECFF,#1f2020);fontFamily=Trebuchet MS,Verdana,Arial,sans-serif;fontColor=light-dark(#333333,#cccccc);exitX=1;exitY=0.83;entryX=0.99;entryY=0;rounded=0;" target="NZPPFZEXmw3su-86euV2-81">
+            <mxGeometry relative="1" as="geometry">
+              <Array as="points">
+                <mxPoint x="1147" y="837" />
+              </Array>
+            </mxGeometry>
+          </mxCell>
+        </UserObject>
+        <mxCell id="NZPPFZEXmw3su-86euV2-237" parent="NZPPFZEXmw3su-86euV2-236" style="edgeLabel;resizable=0;labelBackgroundColor=none;fontSize=11;spacing=8;align=right;verticalAlign=top;" value="1" vertex="1">
+          <mxGeometry relative="1" x="-1" as="geometry" />
+        </mxCell>
+        <mxCell id="NZPPFZEXmw3su-86euV2-238" parent="NZPPFZEXmw3su-86euV2-236" style="edgeLabel;resizable=0;labelBackgroundColor=none;fontSize=11;spacing=8;align=left;verticalAlign=bottom;" value="n" vertex="1">
+          <mxGeometry relative="1" x="1" as="geometry" />
+        </mxCell>
       </root>
     </mxGraphModel>
   </diagram>
